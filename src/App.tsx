@@ -1,26 +1,32 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+} from "react-router-dom";
+import Home from './home';
+import Original from './original';
 
-function App() {
+function NoMatch() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ padding: 20 }}>
+      <h2>404: Page Not Found</h2>
+      <p>Lorem ipsum dolor sit amet, consectetur adip.</p>
     </div>
   );
 }
+
+function App(){
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home/>} />
+        <Route path="/original" element={<Original/>} />
+        <Route path="*" element={<NoMatch />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
 export default App;
