@@ -13,6 +13,33 @@ const normal_data_array: string[][] = [
 ];
 const hidden_data_array: string[] = ['Mining operations', 'Disaster', 'Extraterrestrial', 'Mother', 'Survival'];
 
+const data_key_record: Record<string,number>={};
+
+function create_data_key_record(normal_arr:string[][],hidden_arr:string[]){
+  for(let row=0;row<normal_arr.length;row++){
+    for(let col=0;col<normal_arr[0].length;col++){
+      data_key_record[normal_arr[row][col]]=row
+    }
+  }
+  for(let col=0;col<normal_arr[0].length;col++){
+    data_key_record[hidden_arr[col]]=normal_arr.length
+  }
+}
+
+function find_max_key_value_pair<T>(some_record: Record<number, number>): [T, number] {
+  const [max_key, max_value] = Object.entries(some_record).reduce(
+    ([prev_key, prev_value], [current_key, current_value]) => {
+      if (current_value > prev_value) {
+        return [current_key, current_value];
+      } else {
+        return [prev_key, prev_value];
+      }
+    },
+    ['', Number.NEGATIVE_INFINITY]
+  );
+  return [max_key as T, max_value];
+}
+
 function create_seed(normal_arr:string[][],hidden_arr:string[],additional:string):string{
   const flat_array:any[]=normal_arr.flat()
   const long_string: string = flat_array.join('') + additional + hidden_arr.join('');
@@ -49,9 +76,10 @@ interface SquareProps {
   rowIndex: number;
   colIndex: number;
   handleDrop: (item: any, targetRowIndex: number, targetColIndex: number) => void;
+  isMatching?: boolean; 
 }
 
-function Square({ text, rowIndex, colIndex, handleDrop }: SquareProps): React.ReactElement {
+function Square({ text, rowIndex, colIndex, handleDrop, isMatching }: SquareProps): React.ReactElement {
   const [{ isDragging }, dragRef] = useDrag(
     () => ({
       type: 'square',
@@ -81,6 +109,7 @@ function Square({ text, rowIndex, colIndex, handleDrop }: SquareProps): React.Re
     alignItems: 'center',
     textAlign: 'center',
     opacity,
+    background: isMatching ? 'yellow' : 'transparent', // Apply yellow background for matching squares
   };
 
   return (
@@ -101,6 +130,9 @@ function Original():React.ReactElement{
     return shuffled_data_array;
   });
 
+  //create the answer key record
+  create_data_key_record(normal_data_array, hidden_data_array)
+
   const handleDrop = (item:any, targetRowIndex:number, targetColIndex:number) => {
     const { rowIndex: sourceRowIndex, colIndex: sourceColIndex } = item;
 
@@ -110,6 +142,33 @@ function Original():React.ReactElement{
     newSquares[targetRowIndex][targetColIndex] = sourceText;
 
     setSquares(newSquares);
+
+      // Check rows for matching elements
+    for (let row = 0; row < gridSize; row++) {
+      const counting_record: Record<number,number>={};
+      for (let col = 0; col < gridSize; col++) {
+
+        const key: keyof typeof data_key_record = newSquares[row][col];
+        const answer_row = data_key_record.hasOwnProperty(key) ? data_key_record[key] : undefined;
+        if (answer_row === undefined) {
+          console.log("answer_row is undefined. Ending the program.");
+          throw new Error("answer_row is undefined");
+        }
+        if (counting_record.hasOwnProperty(answer_row)) {
+          counting_record[answer_row]++;
+        } else {
+          counting_record[answer_row] = 1;
+        }
+      }
+      const [max_key, max_value] = find_max_key_value_pair(counting_record)
+      if(max_value===5){
+        //colour the row
+        console.log("colour the row")
+      } else if (max_value>2){
+        //highlight the row yellow
+        console.log("highlight squares in the row yellow")
+      }
+    }
   };
 
   const gridStyle:React.CSSProperties = {
