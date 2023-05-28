@@ -13,16 +13,25 @@ const normal_data_array: string[][] = [
 ];
 const hidden_data_array: string[] = ['Mining operations', 'Disaster', 'Extraterrestrial', 'Mother', 'Survival'];
 
-const data_key_record: Record<string,number>={};
+let data_key_record: Record<string,number[]>={};
 
 function create_data_key_record(normal_arr:string[][],hidden_arr:string[]){
+  data_key_record={};
   for(let row=0;row<normal_arr.length;row++){
     for(let col=0;col<normal_arr[0].length;col++){
-      data_key_record[normal_arr[row][col]]=row
+      const key:string = normal_arr[row][col];
+      if (!data_key_record.hasOwnProperty(key)) {
+        data_key_record[key] = [];
+      }
+      data_key_record[key].push(row)
     }
   }
   for(let col=0;col<normal_arr[0].length;col++){
-    data_key_record[hidden_arr[col]]=normal_arr.length
+    const key:string = hidden_arr[col];
+    if (!data_key_record.hasOwnProperty(key)) {
+      data_key_record[key] = [];
+    }
+    data_key_record[key].push(normal_arr.length)
   }
 }
 
@@ -143,31 +152,40 @@ function Original():React.ReactElement{
 
     setSquares(newSquares);
 
+    console.log(data_key_record)
       // Check rows for matching elements
     for (let row = 0; row < gridSize; row++) {
       const counting_record: Record<number,number>={};
       for (let col = 0; col < gridSize; col++) {
 
         const key: keyof typeof data_key_record = newSquares[row][col];
-        const answer_row = data_key_record.hasOwnProperty(key) ? data_key_record[key] : undefined;
+        const answer_row:number[]|undefined = data_key_record.hasOwnProperty(key) ? [...data_key_record[key]] : undefined;
         if (answer_row === undefined) {
           console.log("answer_row is undefined. Ending the program.");
           throw new Error("answer_row is undefined");
-        }
-        if (counting_record.hasOwnProperty(answer_row)) {
-          counting_record[answer_row]++;
         } else {
-          counting_record[answer_row] = 1;
+          console.log("answer_row:",answer_row)
+        }
+        for(const ans of answer_row){
+          if (counting_record.hasOwnProperty(ans)) {
+            counting_record[ans]++;
+          } else {
+            counting_record[ans]=1;
+          }
         }
       }
+      //colour matches
       const [max_key, max_value] = find_max_key_value_pair(counting_record)
       if(max_value===5){
         //colour the row
-        console.log("colour the row")
+        console.log("colour",max_key,max_value,counting_record)
       } else if (max_value>2){
         //highlight the row yellow
-        console.log("highlight squares in the row yellow")
+        console.log("highlight",max_key,max_value,counting_record)
+      } else {
+        console.log("else",max_key,max_value,counting_record)
       }
+
     }
   };
 
