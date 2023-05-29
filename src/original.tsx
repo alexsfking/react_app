@@ -13,6 +13,15 @@ const normal_data_array: string[][] = [
 ];
 const hidden_data_array: string[] = ['Mining operations', 'Disaster', 'Extraterrestrial', 'Mother', 'Survival'];
 
+const colors_data_record: Record<number, string> = {
+  0: "blue",
+  1: "red",
+  2: "green",
+  3: "purple",
+  4: "orange",
+  5: "silver",
+};
+
 let data_key_record: Record<string,number[]>={};
 
 function create_data_key_record(normal_arr:string[][],hidden_arr:string[]){
@@ -183,6 +192,7 @@ function Original():React.ReactElement{
         //highlight the row yellow
         console.log("highlight",max_key,max_value,counting_record)
       } else {
+        //do nothing
         console.log("else",max_key,max_value,counting_record)
       }
 
