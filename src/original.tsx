@@ -94,17 +94,21 @@ interface SquareProps {
   rowIndex: number;
   colIndex: number;
   handleDrop: (item: any, targetRowIndex: number, targetColIndex: number) => void;
-  isMatching?: boolean; 
+  isMatching?: boolean;
+  color?: string; // Add color prop
 }
 
-function Square({ text, rowIndex, colIndex, handleDrop, isMatching }: SquareProps): React.ReactElement {
+function Square({ text, rowIndex, colIndex, handleDrop, isMatching, color }: SquareProps): React.ReactElement {
   const [{ isDragging }, dragRef] = useDrag(
     () => ({
       type: 'square',
       item: { rowIndex, colIndex },
-      collect: (monitor: DragSourceMonitor) => ({
-        isDragging: monitor.isDragging(),
-      }),
+      collect: (monitor: DragSourceMonitor) => {
+        console.log('isDragging:', monitor.isDragging());
+        return {
+          isDragging: monitor.isDragging(),
+        };
+      },
     }),
     []
   );
@@ -112,7 +116,10 @@ function Square({ text, rowIndex, colIndex, handleDrop, isMatching }: SquareProp
 
   const [, dropRef] = useDrop({
     accept: 'square',
-    drop: (item) => handleDrop(item, rowIndex, colIndex),
+    drop: (item) => {
+      console.log('Drop event:', item, rowIndex, colIndex);
+      handleDrop(item, rowIndex, colIndex);
+    }
   });
 
   const opacity = isDragging ? 0.5 : 1;
@@ -127,12 +134,14 @@ function Square({ text, rowIndex, colIndex, handleDrop, isMatching }: SquareProp
     alignItems: 'center',
     textAlign: 'center',
     opacity,
-    background: isMatching ? 'yellow' : 'transparent', // Apply yellow background for matching squares
+    background: isMatching ? 'yellow' : color || 'transparent', // Apply the specified color or default to transparent
   };
+
+  console.log('Square props:', { text, rowIndex, colIndex, handleDrop, isMatching, color });
 
   return (
     <div ref={dropRef}>
-      <div ref={dragRef} style={squareStyle}>
+      <div ref={dragRef} style={squareStyle} draggable={true}>
         {text}
       </div>
     </div>
@@ -143,15 +152,27 @@ function Original():React.ReactElement{
   const gridSize = 5;
   const squareSize = 120;
 
-  const [squares, setSquares] = React.useState(() => {
+  interface SquareData {
+    text: string;
+    color?: string;
+  }
+
+  const [squares, setSquares] = React.useState<SquareData[][]>(() => {
     const shuffled_data_array: string[][] = shuffle_array(normal_data_array, 'myseed124');
-    return shuffled_data_array;
+    const squareDataArray: SquareData[][] = shuffled_data_array.map(row => row.map(text => ({ text })));
+    return squareDataArray;
   });
 
   //create the answer key record
   create_data_key_record(normal_data_array, hidden_data_array)
 
   const handleDrop = (item:any, targetRowIndex:number, targetColIndex:number) => {
+    
+    console.log('handleDrop called');
+    console.log('item:', item);
+    console.log('targetRowIndex:', targetRowIndex);
+    console.log('targetColIndex:', targetColIndex);
+
     const { rowIndex: sourceRowIndex, colIndex: sourceColIndex } = item;
 
     const newSquares = [...squares];
@@ -167,7 +188,7 @@ function Original():React.ReactElement{
       const counting_record: Record<number,number>={};
       for (let col = 0; col < gridSize; col++) {
 
-        const key: keyof typeof data_key_record = newSquares[row][col];
+        const key: keyof typeof data_key_record = newSquares[row][col].text;
         const answer_row:number[]|undefined = data_key_record.hasOwnProperty(key) ? [...data_key_record[key]] : undefined;
         if (answer_row === undefined) {
           console.log("answer_row is undefined. Ending the program.");
@@ -184,12 +205,24 @@ function Original():React.ReactElement{
         }
       }
       //colour matches
-      const [max_key, max_value] = find_max_key_value_pair(counting_record)
+      const [max_key, max_value] = find_max_key_value_pair<number>(counting_record)
       if(max_value===5){
         //colour the row
+        newSquares[row].forEach((_, col) => {
+          newSquares[row][col] = {
+            text: newSquares[row][col].text,
+            color: colors_data_record[max_key],
+          };
+        });
         console.log("colour",max_key,max_value,counting_record)
       } else if (max_value>2){
         //highlight the row yellow
+        newSquares[row].forEach((_, col) => {
+          newSquares[row][col] = {
+            text: newSquares[row][col].text,
+            color: 'yellow',
+          };
+        });
         console.log("highlight",max_key,max_value,counting_record)
       } else {
         //do nothing
@@ -217,14 +250,16 @@ function Original():React.ReactElement{
     <div>
       <h1>Grid Page</h1>
       <div style={outerStyle}>
-        <div style={gridStyle}>{squares.map((row, rowIndex) =>
-            row.map((text, colIndex) => (
+        <div style={gridStyle}>
+          {squares.map((row, rowIndex) =>
+            row.map((square, colIndex) => (
               <Square
                 key={`${rowIndex}-${colIndex}`}
-                text={text}
+                text={square.text}
                 rowIndex={rowIndex}
                 colIndex={colIndex}
                 handleDrop={handleDrop}
+                color={square.color}
               />
             ))
           )}
