@@ -218,10 +218,18 @@ function Original():React.ReactElement{
       } else if (max_value>2){
         //highlight the row yellow
         newSquares[row].forEach((_, col) => {
-          newSquares[row][col] = {
-            text: newSquares[row][col].text,
-            color: 'yellow',
-          };
+          const key: keyof typeof data_key_record = newSquares[row][col].text;
+          const answer_row:number[]|undefined = data_key_record.hasOwnProperty(key) ? [...data_key_record[key]] : undefined;
+          if (answer_row === undefined) {
+            console.log("answer_row is undefined. Ending the program.");
+            throw new Error("answer_row is undefined");
+          }
+          if (answer_row.map(String).includes(String(max_key))) {
+            newSquares[row][col] = {
+              text: newSquares[row][col].text,
+              color: 'yellow',
+            };
+          }
         });
         console.log("highlight",max_key,max_value,counting_record)
       } else {
@@ -245,6 +253,8 @@ function Original():React.ReactElement{
     justifyContent: 'center',
     width:'100%',
   };
+
+  console.log("squares: ",squares)
 
   return (
     <div>
