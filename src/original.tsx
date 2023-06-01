@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import seedrandom from 'seedrandom';
 import { useDrag, useDrop, DragSourceMonitor } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+//import { HTML5Backend } from 'react-dnd-html5-backend';
 
 const normal_data_array: string[][] = [
   ['Card drafting', 'Mining operations', 'Victory points', 'Colonies', 'Red planet'],
@@ -157,7 +157,7 @@ function Original():React.ReactElement{
     color?: string;
   }
 
-  const [squares, setSquares] = React.useState<SquareData[][]>(() => {
+  const [squares, set_squares] = React.useState<SquareData[][]>(() => {
     const shuffled_data_array: string[][] = shuffle_array(normal_data_array, 'myseed124');
     const squareDataArray: SquareData[][] = shuffled_data_array.map(row => row.map(text => ({ text })));
     return squareDataArray;
@@ -165,6 +165,45 @@ function Original():React.ReactElement{
 
   //create the answer key record
   create_data_key_record(normal_data_array, hidden_data_array)
+
+  const clear_colors = (newSquares: any[]) => {
+    for (let row = 0; row < gridSize; row++) {
+      for (let col = 0; col < gridSize; col++) {
+        newSquares[row][col] = {
+          text: newSquares[row][col].text,
+          color: 'transparent',
+        };
+      }
+    }
+  };
+
+  const color_row = (newSquares: any[], row: number, color: number) => {
+    newSquares[row].forEach((_:number, col:number) => {
+      newSquares[row][col] = {
+        text: newSquares[row][col].text,
+        color: colors_data_record[color],
+      };
+    });
+  };
+  
+  const highlight_row = (newSquares: any[], row: number, highlightValue: number) => {
+    newSquares[row].forEach((_:number, col:number) => {
+      const key: keyof typeof data_key_record = newSquares[row][col].text;
+      const answer_row: number[] | undefined = data_key_record.hasOwnProperty(key) ? [...data_key_record[key]] : undefined;
+      if (answer_row === undefined) {
+        console.log("answer_row is undefined. Ending the program.");
+        throw new Error("answer_row is undefined");
+      }
+      if (answer_row.map(String).includes(String(highlightValue))) {
+        newSquares[row][col] = {
+          text: newSquares[row][col].text,
+          color: 'yellow',
+        };
+      }
+    });
+  };
+
+
 
   const handleDrop = (item:any, targetRowIndex:number, targetColIndex:number) => {
     
@@ -180,10 +219,13 @@ function Original():React.ReactElement{
     newSquares[sourceRowIndex][sourceColIndex] = newSquares[targetRowIndex][targetColIndex];
     newSquares[targetRowIndex][targetColIndex] = sourceText;
 
-    setSquares(newSquares);
+    set_squares(newSquares);
+
+    //remove all colours
+    clear_colors(newSquares);
 
     console.log(data_key_record)
-      // Check rows for matching elements
+    // Check rows for matching elements
     for (let row = 0; row < gridSize; row++) {
       const counting_record: Record<number,number>={};
       for (let col = 0; col < gridSize; col++) {
@@ -208,29 +250,11 @@ function Original():React.ReactElement{
       const [max_key, max_value] = find_max_key_value_pair<number>(counting_record)
       if(max_value===5){
         //colour the row
-        newSquares[row].forEach((_, col) => {
-          newSquares[row][col] = {
-            text: newSquares[row][col].text,
-            color: colors_data_record[max_key],
-          };
-        });
+        color_row(newSquares,row,max_key)
         console.log("colour",max_key,max_value,counting_record)
       } else if (max_value>2){
         //highlight the row yellow
-        newSquares[row].forEach((_, col) => {
-          const key: keyof typeof data_key_record = newSquares[row][col].text;
-          const answer_row:number[]|undefined = data_key_record.hasOwnProperty(key) ? [...data_key_record[key]] : undefined;
-          if (answer_row === undefined) {
-            console.log("answer_row is undefined. Ending the program.");
-            throw new Error("answer_row is undefined");
-          }
-          if (answer_row.map(String).includes(String(max_key))) {
-            newSquares[row][col] = {
-              text: newSquares[row][col].text,
-              color: 'yellow',
-            };
-          }
-        });
+        highlight_row(newSquares,row,max_key)
         console.log("highlight",max_key,max_value,counting_record)
       } else {
         //do nothing
