@@ -14,13 +14,16 @@ const normal_data_array: string[][] = [
 const hidden_data_array: string[] = ['Mining operations', 'Disaster', 'Extraterrestrial', 'Mother', 'Survival'];
 
 const colors_data_record: Record<number, string> = {
-  0: "blue",
-  1: "red",
-  2: "green",
-  3: "purple",
-  4: "orange",
+  0: "#50BFE6", //blizzard blue
+  1: "#FF355E", //radical red
+  2: "#66FF66", //screaming green
+  3: "#FF00CC", //hot magenta
+  4: "#FF9933", //neon carrot
   5: "silver",
 };
+
+const default_color='#F6F6F6';
+const highlight_color='yellow';
 
 let data_key_record: Record<string,number[]>={};
 
@@ -128,13 +131,22 @@ function Square({ text, rowIndex, colIndex, handleDrop, isMatching, color }: Squ
   const squareStyle: React.CSSProperties = {
     width: `${squareSize}px`,
     height: `${squareSize}px`,
-    border: '1px solid black',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     textAlign: 'center',
     opacity,
-    background: isMatching ? 'yellow' : color || 'transparent', // Apply the specified color or default to transparent
+    fontSize: '16px',
+    fontWeight: 'bold',
+    backgroundColor: isMatching ? highlight_color : color || default_color, // Apply the specified color or default to transparent
+    borderColor: isMatching ? highlight_color : default_color, // Add borderColor
+    border: 'none',
+    borderRadius: '8%',
+    boxShadow: `inset 0 0 5px rgba(0, 0, 0, 0.3),
+                0px 0px 5px rgba(0, 0, 0, 0.3)`,
+    margin: '5px',
+    borderBottom: '5px solid rgba(0, 0, 0, 0.3)', // Add small border at the bottom
+
   };
 
   console.log('Square props:', { text, rowIndex, colIndex, handleDrop, isMatching, color });
@@ -155,6 +167,7 @@ function Original():React.ReactElement{
   interface SquareData {
     text: string;
     color?: string;
+    border_color?: string;
   }
 
   const [squares, set_squares] = React.useState<SquareData[][]>(() => {
@@ -171,7 +184,7 @@ function Original():React.ReactElement{
       for (let col = 0; col < gridSize; col++) {
         newSquares[row][col] = {
           text: newSquares[row][col].text,
-          color: 'transparent',
+          color: default_color,
         };
       }
     }
@@ -195,14 +208,46 @@ function Original():React.ReactElement{
         throw new Error("answer_row is undefined");
       }
       if (answer_row.map(String).includes(String(highlightValue))) {
-        newSquares[row][col] = {
-          text: newSquares[row][col].text,
-          color: 'yellow',
-        };
+        if (newSquares[row][col].color===default_color) {
+          newSquares[row][col] = {
+            text: newSquares[row][col].text,
+            color: highlight_color,
+          };
+        } else {
+          newSquares[row][col] = {
+            text: newSquares[row][col].text,
+            border_color: highlight_color,
+          };
+        }
       }
     });
   };
 
+  const color_column = (newSquares: any[], col: number, color: number) => {
+    newSquares.forEach((row: any[]) => {
+      row[col] = {
+        text: row[col].text,
+        color: colors_data_record[color],
+      };
+    });
+  };
+
+  const highlight_column = (newSquares: any[], col: number, highlightValue: number) => {
+    newSquares.forEach((row: any[]) => {
+      const key: keyof typeof data_key_record = row[col].text;
+      const answer_column: number[] | undefined = data_key_record.hasOwnProperty(key) ? [...data_key_record[key]] : undefined;
+      if (answer_column === undefined) {
+        console.log("answer_column is undefined. Ending the program.");
+        throw new Error("answer_column is undefined");
+      }
+      if (answer_column.map(String).includes(String(highlightValue))) {
+        row[col] = {
+          text: row[col].text,
+          color: highlight_color,
+        };
+      }
+    });
+  };
 
 
   const handleDrop = (item:any, targetRowIndex:number, targetColIndex:number) => {
@@ -225,6 +270,7 @@ function Original():React.ReactElement{
     clear_colors(newSquares);
 
     console.log(data_key_record)
+
     // Check rows for matching elements
     for (let row = 0; row < gridSize; row++) {
       const counting_record: Record<number,number>={};
@@ -246,7 +292,7 @@ function Original():React.ReactElement{
           }
         }
       }
-      //colour matches
+      //colour matches - row
       const [max_key, max_value] = find_max_key_value_pair<number>(counting_record)
       if(max_value===5){
         //colour the row
@@ -260,8 +306,45 @@ function Original():React.ReactElement{
         //do nothing
         console.log("else",max_key,max_value,counting_record)
       }
-
+      
     }
+
+    //match columns
+    for (let col = 0; col < gridSize; col++) {
+      const counting_record: Record<number,number>={};
+      for (let row = 0; row < gridSize; row++) {
+        const key: keyof typeof data_key_record = newSquares[row][col].text;
+        const answer_row:number[]|undefined = data_key_record.hasOwnProperty(key) ? [...data_key_record[key]] : undefined;
+        if (answer_row === undefined) {
+          console.log("answer_row is undefined. Ending the program.");
+          throw new Error("answer_row is undefined");
+        } else {
+          console.log("answer_row:",answer_row)
+        }
+        for(const ans of answer_row){
+          if (counting_record.hasOwnProperty(ans)) {
+            counting_record[ans]++;
+          } else {
+            counting_record[ans]=1;
+          }
+        }
+      }
+      
+      //colour matches - col
+      const [max_key, max_value] = find_max_key_value_pair<number>(counting_record)
+      if(max_value===5){
+        //colour the column
+        color_column(newSquares,col,max_key)
+        console.log("colour",max_key,max_value,counting_record)
+      } else if (max_value>2){
+        //highlight the column yellow
+        highlight_column(newSquares,col,max_key)
+        console.log("highlight",max_key,max_value,counting_record)
+      } else {
+        //do nothing
+        console.log("else",max_key,max_value,counting_record)
+      }
+    };
   };
 
   const gridStyle:React.CSSProperties = {
@@ -269,7 +352,7 @@ function Original():React.ReactElement{
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    width: `${gridSize * squareSize+10}px`,
+    width: `${gridSize * squareSize+50}px`,
   };
 
   const outerStyle:React.CSSProperties = {
