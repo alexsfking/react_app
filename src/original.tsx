@@ -24,6 +24,7 @@ const colors_data_record: Record<number, string> = {
 
 const default_color='#F6F6F6';
 const highlight_color='yellow';
+const special_color=colors_data_record[5];
 
 let data_key_record: Record<string,number[]>={};
 
@@ -100,9 +101,13 @@ interface SquareProps {
   isMatching?: boolean;
   color?: string; // Add color prop
   borderColor?: string;
+
+  // keep track of what colours each square has
+  color_list?: string[];
+
 }
 
-function Square({ text, rowIndex, colIndex, handleDrop, isMatching, color, borderColor }: SquareProps): React.ReactElement {
+function Square({ text, rowIndex, colIndex, handleDrop, isMatching, color, borderColor, color_list }: SquareProps): React.ReactElement {
   const [{ isDragging }, dragRef] = useDrag(
     () => ({
       type: 'square',
@@ -141,7 +146,9 @@ function Square({ text, rowIndex, colIndex, handleDrop, isMatching, color, borde
     fontWeight: 'bold',
     backgroundColor: isMatching ? highlight_color : color || default_color, // Apply the specified color or default to transparent
     borderColor: isMatching ? highlight_color : borderColor || default_color, // Add borderColor
-    border: 'none',
+    borderTop: 'none', // Add separate border properties
+    borderRight: 'none',
+    borderLeft: 'none',
     borderRadius: '8%',
     boxShadow: `inset 0 0 5px rgba(0, 0, 0, 0.3),
                 0px 0px 5px rgba(0, 0, 0, 0.3)`,
@@ -169,6 +176,9 @@ function Original():React.ReactElement{
     text: string;
     color?: string;
     border_color?: string;
+
+    // keep track of what colours each square has
+    color_list?: string[];
   }
 
   const [squares, set_squares] = React.useState<SquareData[][]>(() => {
@@ -186,6 +196,8 @@ function Original():React.ReactElement{
         newSquares[row][col] = {
           text: newSquares[row][col].text,
           color: default_color,
+          borderColor: default_color,
+          color_list: [],
         };
       }
     }
@@ -270,9 +282,10 @@ function Original():React.ReactElement{
 
   const color_row = (newSquares: any[], row: number, color: number) => {
     newSquares[row].forEach((_:number, col:number) => {
+      newSquares[row][col].color_list.push(colors_data_record[color]);
       newSquares[row][col] = {
         text: newSquares[row][col].text,
-        color: colors_data_record[color],
+        color_list: newSquares[row][col].color_list,
       };
     });
   };
@@ -286,18 +299,10 @@ function Original():React.ReactElement{
         throw new Error("answer_row is undefined");
       }
       if (answer_row.map(String).includes(String(highlightValue))) {
-        if (newSquares[row][col].color===default_color || newSquares[row][col].color===highlight_color) {
-          newSquares[row][col] = {
-            text: newSquares[row][col].text,
-            color: highlight_color,
-          };
-        } else {
-          console.log("???highlight_row???",newSquares[row][col])
-          newSquares[row][col] = {
-            text: newSquares[row][col].text,
-            border_color: highlight_color,
-            color:  newSquares[row][col].color,
-          };
+        newSquares[row][col].color_list.push(highlight_color);
+        newSquares[row][col] = {
+          text: newSquares[row][col].text,
+          color_list: newSquares[row][col].color_list,
         }
       }
     });
@@ -305,9 +310,10 @@ function Original():React.ReactElement{
 
   const color_column = (newSquares: any[], col: number, color: number) => {
     newSquares.forEach((row: any[]) => {
+      row[col].color_list.push(colors_data_record[color]);
       row[col] = {
         text: row[col].text,
-        color: colors_data_record[color],
+        color_list: row[col].color_list,
       };
     });
   };
@@ -321,23 +327,44 @@ function Original():React.ReactElement{
         throw new Error("answer_column is undefined");
       }
       if (answer_column.map(String).includes(String(highlightValue))) {
-        if(row[col].color===default_color || row[col].color===highlight_color){
-          row[col] = {
-            text: row[col].text,
-            color: highlight_color,
-          };
-        } else {
-          console.log("???highlight_col???",row[col])
-          row[col] = {
-            text: row[col].text,
-            border_color: highlight_color,
-            color: row[col].color,
-          };
+        row[col].color_list.push(highlight_color);
+        row[col] = {
+          text: row[col].text,
+          color_list: row[col].color_list,
         }
       }
     });
   };
 
+  function color_all_squares(newSquares: SquareData[][]) {
+    for (let row:number = 0; row < gridSize; row++) {
+      for (let col:number = 0; col < gridSize; col++) {
+        let top:string = default_color;
+        let bot:string = default_color;
+        let color_array:string[]=newSquares[row][col].color_list ?? [];
+        if(color_array && color_array.length!==0){
+          if(color_array.length===1){
+            top=color_array[0];
+            bot=default_color;
+          } else if (color_array.length>1){
+            if(color_array.map(String).includes(String(special_color))){
+              top=special_color;
+              bot = color_array.find((color) => color !== default_color && color !== special_color) ?? default_color;
+            } else {
+              top = color_array.find((color) => color !== default_color) ?? default_color;
+              bot = color_array.find((color) => color !== default_color && color !== top) ?? default_color;
+            }
+          }
+        }
+        console.log("color_all_squares ", top, bot, newSquares[row][col])
+        newSquares[row][col] = {
+          text: newSquares[row][col].text,
+          color: top,
+          border_color: bot,
+        }
+      }
+    }
+  }
 
   const handleDrop = (item:any, targetRowIndex:number, targetColIndex:number) => {
     
@@ -365,6 +392,9 @@ function Original():React.ReactElement{
 
     //match columns
     check_columns_for_matching_elements(newSquares);
+
+    //
+    color_all_squares(newSquares);
   };
 
   const gridStyle:React.CSSProperties = {
