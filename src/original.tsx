@@ -357,6 +357,11 @@ function Original():React.ReactElement{
           }
         }
         console.log("color_all_squares ", top, bot, newSquares[row][col])
+        const colors_data_record_values:string[] = Object.values(colors_data_record);
+        if(bot!==default_color || bot!==special_color || !colors_data_record_values.includes(bot)){
+          console.log("strange error ",top,bot);
+          bot=default_color;
+        }
         newSquares[row][col] = {
           text: newSquares[row][col].text,
           color: top,
