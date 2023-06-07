@@ -27,7 +27,27 @@ const default_border_color='#bdbdbd';
 const highlight_color='yellow';
 const special_color=colors_data_record[5];
 
+const max_swaps:number = 30;
+let swap_count:number = 0;
+let remaining_swaps:number = max_swaps;
+
 let data_key_record: Record<string,number[]>={};
+
+function increment_swaps(){
+  swap_count++;
+}
+
+function is_max_swaps(){
+  if(remaining_swaps<=0){
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function calculate_remaining_swaps(){
+  remaining_swaps=max_swaps-swap_count;
+}
 
 function create_data_key_record(normal_arr:string[][],hidden_arr:string[]){
   data_key_record={};
@@ -380,6 +400,13 @@ function Original():React.ReactElement{
     console.log('targetRowIndex:', targetRowIndex);
     console.log('targetColIndex:', targetColIndex);
 
+    if(is_max_swaps()){
+      console.log("Finished");
+      return;
+    }
+    increment_swaps();
+    calculate_remaining_swaps();
+
     const { rowIndex: sourceRowIndex, colIndex: sourceColIndex } = item;
 
     const newSquares = [...squares];
@@ -418,6 +445,11 @@ function Original():React.ReactElement{
     width:'100%',
   };
 
+  const scoreStyle:React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'center',
+  };
+
   console.log("squares: ",squares)
 
   return (
@@ -438,6 +470,11 @@ function Original():React.ReactElement{
               />
             ))
           )}
+        </div>
+      </div>
+      <div style={outerStyle}>
+        <div style={scoreStyle}>
+            <h2>Swaps: {remaining_swaps}</h2>
         </div>
       </div>
       <div>
