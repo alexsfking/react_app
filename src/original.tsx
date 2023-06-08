@@ -27,12 +27,135 @@ const default_border_color='#bdbdbd';
 const highlight_color='yellow';
 const special_color=colors_data_record[5];
 
+class Clue {
+  private clue_number: number;
+  private color: string;
+  private cards: string[];
+  private solved: boolean;
+
+  constructor(clue_number: number, color: string, cards: string[]) {
+    this.clue_number = clue_number;
+    this.color = color;
+    this.cards = cards;
+    this.solved = false;
+  }
+
+  get clueNumber(): number {
+    return this.clue_number;
+  }
+
+  set clueNumber(value: number) {
+    this.clue_number = value;
+  }
+
+  get clueColor(): string {
+    return this.color;
+  }
+
+  set clueColor(value: string) {
+    this.color = value;
+  }
+
+  get clueCards(): string[] {
+    return this.cards;
+  }
+
+  set clueCards(value: string[]) {
+    this.cards = value;
+  }
+
+  get isSolved(): boolean {
+    return this.solved;
+  }
+
+  markAsSolved(): void {
+    this.solved = true;
+  }
+
+  markAsUnsolved(): void {
+    this.solved = false;
+  }
+}
+
+class ClueStorage {
+  private clues:Clue[];
+
+  constructor() {
+    this.clues=[]
+    for (let i = 0; i < normal_data_array.length; i++) {
+      let row:string[] = normal_data_array[i];
+      let clue_number:number = i;
+      let color:string = colors_data_record[i];
+      let cards:string[] = row.slice();
+      const clue:Clue=new Clue(clue_number,color,cards);
+      this.addClue(clue);
+    }
+    
+    const clue_number:number = normal_data_array.length;
+    const color:string = colors_data_record[clue_number];
+    const cards:string[] = hidden_data_array.slice();
+    const clue:Clue=new Clue(clue_number,color,cards);
+    this.addClue(clue);;
+  }
+
+  addClue(clue: Clue): void {
+    this.clues.push(clue);
+  }
+
+  removeClue(clue: Clue): void {
+    const index = this.clues.indexOf(clue);
+    if (index !== -1) {
+      this.clues.splice(index, 1);
+    }
+  }
+
+  getClues(): Clue[] {
+    return this.clues;
+  }
+
+  getUnsolvedClues(): Clue[] {
+    return this.clues.filter((clue) => !clue.isSolved);
+  }
+
+  getSolvedClues(): Clue[] {
+    return this.clues.filter((clue) => clue.isSolved);
+  }
+
+  getNumSolvedClues(): number {
+    return this.clues.filter((clue) => clue.isSolved).length;
+  }
+
+  getAllSolved(): boolean {
+    return this.clues.every((clue) => clue.isSolved);
+  }
+
+  setSolved(card:string,color:string):void{
+    const clues:Clue[]=this.getUnsolvedClues();
+    for (const clue of clues) {
+      if(clue.clueColor === color && clue.clueCards.includes(card)){
+        clue.markAsSolved()
+        return;
+      }
+    }
+  }
+
+  setUnsolved():void{
+    const clues: Clue[] = this.getClues();
+    for (const clue of clues) {
+      clue.markAsUnsolved();
+    }
+  }
+}
+
+
+//swap counter
 const max_swaps:number = 30;
 let swap_count:number = 0;
 let remaining_swaps:number = max_swaps;
 
 let data_key_record: Record<string,number[]>={};
 
+//swap counter
 function increment_swaps(){
   swap_count++;
 }
@@ -212,7 +335,11 @@ function Original():React.ReactElement{
   //create the answer key record
   create_data_key_record(normal_data_array, hidden_data_array)
 
+  //create clue classes
+  const clue_storage:ClueStorage=new ClueStorage();
+
   const clear_colors = (newSquares: any[]) => {
+    clue_storage.setUnsolved();
     for (let row = 0; row < gridSize; row++) {
       for (let col = 0; col < gridSize; col++) {
         newSquares[row][col] = {
@@ -384,6 +511,9 @@ function Original():React.ReactElement{
           console.log("strange error ",top,bot);
           bot=default_border_color;
         }
+        if(top!==default_color && top!==special_color){
+          clue_storage.setSolved(newSquares[row][col].text,top);
+        }
         newSquares[row][col] = {
           text: newSquares[row][col].text,
           color: top,
@@ -445,9 +575,17 @@ function Original():React.ReactElement{
     width:'100%',
   };
 
+  const scoreOuterStyle:React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    width:'100%',
+  };
+
   const scoreStyle:React.CSSProperties = {
+    flex: 1,
     display: 'flex',
     justifyContent: 'center',
+    alignItems: 'center',
   };
 
   console.log("squares: ",squares)
@@ -472,7 +610,13 @@ function Original():React.ReactElement{
           )}
         </div>
       </div>
-      <div style={outerStyle}>
+      <div style={scoreOuterStyle}>
+        <div style={scoreStyle}>
+            <h2>Clues: {clue_storage.getNumSolvedClues()}/6</h2>
+        </div>
+        <div style={scoreStyle}>
+
+        </div>
         <div style={scoreStyle}>
             <h2>Swaps: {remaining_swaps}</h2>
         </div>
