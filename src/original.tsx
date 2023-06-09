@@ -339,7 +339,7 @@ function Original():React.ReactElement{
   const clue_storage:ClueStorage=new ClueStorage();
 
   const clear_colors = (newSquares: any[]) => {
-    clue_storage.setUnsolved();
+    //clue_storage.setUnsolved();
     for (let row = 0; row < gridSize; row++) {
       for (let col = 0; col < gridSize; col++) {
         newSquares[row][col] = {
