@@ -27,6 +27,8 @@ const default_border_color='#bdbdbd';
 const highlight_color='yellow';
 const special_color=colors_data_record[5];
 
+let clues_solved:number=0;
+
 class Clue {
   private clue_number: number;
   private color: string;
@@ -139,7 +141,17 @@ class ClueStorage {
     }
   }
 
-  setUnsolved():void{
+  setUnsolved(card:string):void{
+    const clues:Clue[]=this.getClues();
+    for (const clue of clues) {
+      if(clue.clueCards.includes(card)){
+        clue.markAsUnsolved();
+        return;
+      }
+    }
+  }
+
+  setAllUnsolved():void{
     const clues: Clue[] = this.getClues();
     for (const clue of clues) {
       clue.markAsUnsolved();
@@ -511,9 +523,12 @@ function Original():React.ReactElement{
           console.log("strange error ",top,bot);
           bot=default_border_color;
         }
-        if(top!==default_color && top!==special_color){
+        if(top!==default_color && top!==highlight_color){
           clue_storage.setSolved(newSquares[row][col].text,top);
+        } else {
+          clue_storage.setUnsolved(newSquares[row][col].text);
         }
+        clues_solved=clue_storage.getNumSolvedClues();
         newSquares[row][col] = {
           text: newSquares[row][col].text,
           color: top,
@@ -612,7 +627,7 @@ function Original():React.ReactElement{
       </div>
       <div style={scoreOuterStyle}>
         <div style={scoreStyle}>
-            <h2>Clues: {clue_storage.getNumSolvedClues()}/6</h2>
+            <h2>Clues: {clues_solved}/6</h2>
         </div>
         <div style={scoreStyle}>
 
