@@ -586,22 +586,54 @@ function Original():React.ReactElement{
 
   const outerStyle:React.CSSProperties = {
     display: 'flex',
-    justifyContent: 'center',
-    width:'100%',
-  };
-
-  const scoreOuterStyle:React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    width:'100%',
-  };
-
-  const scoreStyle:React.CSSProperties = {
-    flex: 1,
-    display: 'flex',
-    justifyContent: 'center',
+    flexDirection: 'column',
     alignItems: 'center',
+    justifyContent: 'center',
+    width:'100%',
   };
+
+  const containerStyle:React.CSSProperties ={
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width:'100%',
+  };
+
+  const clueSwapContainerStyle:React.CSSProperties = {
+    //position: 'relative', // Add relative positioning
+    display: 'flex',
+    //flexDirection: 'row',
+    //alignItems:'revert',
+    //justifyContent: 'flex-end',
+    //alignItems: 'center',
+    //marginTop: '16px', // Add margin-top to create space between the grids and the clue container
+    width: '100%',
+  };
+
+  const clueStyle:React.CSSProperties = {
+    display: 'flex',
+    //flexDirection: 'row',
+    //alignItems: 'flex-start',
+    flexGrow: 1,
+    justifyContent: 'center',
+    width: '100%',
+    //display: 'flex',
+    //justifyContent: 'center',
+    //alignItems: 'center',
+  };
+
+  const swapStyle:React.CSSProperties = {
+    display: 'flex',
+    //flexDirection: 'row',
+    //alignItems: 'flex-end', /* Align swaps to the right */
+    justifyContent: 'center',
+    width: '100%',
+    //display: 'flex',
+    //justifyContent: 'center',
+    //alignItems: 'center',
+  };
+
 
   console.log("squares: ",squares)
 
@@ -609,31 +641,30 @@ function Original():React.ReactElement{
     <div>
       <h1>Grid Page</h1>
       <div style={outerStyle}>
-        <div style={gridStyle}>
-          {squares.map((row, rowIndex) =>
-            row.map((square, colIndex) => (
-              <Square
-                key={`${rowIndex}-${colIndex}`}
-                text={square.text}
-                rowIndex={rowIndex}
-                colIndex={colIndex}
-                handleDrop={handleDrop}
-                color={square.color}
-                borderBottomColor={square.border_bottom_color}
-              />
-            ))
-          )}
-        </div>
-      </div>
-      <div style={scoreOuterStyle}>
-        <div style={scoreStyle}>
-            <h2>Clues: {clues_solved}/6</h2>
-        </div>
-        <div style={scoreStyle}>
-
-        </div>
-        <div style={scoreStyle}>
-            <h2>Swaps: {remaining_swaps}</h2>
+        <div style={containerStyle}>
+          <div style={gridStyle}>
+            {squares.map((row, rowIndex) =>
+              row.map((square, colIndex) => (
+                <Square
+                  key={`${rowIndex}-${colIndex}`}
+                  text={square.text}
+                  rowIndex={rowIndex}
+                  colIndex={colIndex}
+                  handleDrop={handleDrop}
+                  color={square.color}
+                  borderBottomColor={square.border_bottom_color}
+                />
+              ))
+            )}
+          </div>
+          <div style={clueSwapContainerStyle}>
+            <div style={clueStyle}>
+                <h2>Clues: {clues_solved}/6</h2>
+            </div>
+            <div style={swapStyle}>
+                <h2>Swaps: {remaining_swaps}</h2>
+            </div>
+          </div>
         </div>
       </div>
       <div>
