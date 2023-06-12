@@ -14,11 +14,11 @@ const normal_data_array: string[][] = [
 const hidden_data_array: string[] = ['Mining operations', 'Disaster', 'Extraterrestrial', 'Mother', 'Survival'];
 
 const colors_data_record: Record<number, string> = {
-  0: "#50BFE6", //blizzard blue
-  1: "#FF355E", //radical red
-  2: "#66FF66", //screaming green
-  3: "#FF00CC", //hot magenta
-  4: "#FF9933", //neon carrot
+  0: '#50BFE6', //blizzard blue
+  1: '#FF355E', //radical red
+  2: '#66FF66', //screaming green
+  3: '#FF00CC', //hot magenta
+  4: '#FF9933', //neon carrot
   5: 'linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 1))',
 };
 
@@ -27,6 +27,15 @@ const default_border_color='#bdbdbd';
 const highlight_color='yellow';
 const special_color=colors_data_record[5];
 
+const row_to_clue_name_record: Record<number, string> = {
+  0: 'Terraforming Mars', //blizzard blue
+  1: 'Chernobyl', //radical red
+  2: 'Arrival', //screaming green
+  3: 'Promised Neverland', //hot magenta
+  4: 'Foundation', //neon carrot
+  5: 'Alien',
+};
+
 let clues_solved:number=0;
 
 class Clue {
@@ -34,11 +43,13 @@ class Clue {
   private color: string;
   private cards: string[];
   private solved: boolean;
+  private clue_name: string;
 
-  constructor(clue_number: number, color: string, cards: string[]) {
+  constructor(clue_number: number, color: string, cards: string[], clue_name:string) {
     this.clue_number = clue_number;
     this.color = color;
     this.cards = cards;
+    this.clue_name=clue_name;
     this.solved = false;
   }
 
@@ -87,17 +98,19 @@ class ClueStorage {
     for (let i = 0; i < normal_data_array.length; i++) {
       let row:string[] = normal_data_array[i];
       let clue_number:number = i;
-      let color:string = colors_data_record[i];
+      let color:string = colors_data_record[clue_number];
       let cards:string[] = row.slice();
-      const clue:Clue=new Clue(clue_number,color,cards);
+      let name:string = row_to_clue_name_record[clue_number];
+      const clue:Clue=new Clue(clue_number,color,cards,name);
       this.addClue(clue);
     }
     
     const clue_number:number = normal_data_array.length;
     const color:string = colors_data_record[clue_number];
     const cards:string[] = hidden_data_array.slice();
-    const clue:Clue=new Clue(clue_number,color,cards);
-    this.addClue(clue);;
+    const name:string = row_to_clue_name_record[clue_number];
+    const clue:Clue=new Clue(clue_number,color,cards,name);
+    this.addClue(clue);
   }
 
   addClue(clue: Clue): void {
