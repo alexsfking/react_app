@@ -37,6 +37,7 @@ const row_to_clue_name_record: Record<number, string> = {
 };
 
 let clues_solved:number=0;
+let revealed_clues:string[]=[];
 
 class Clue {
   private clue_number: number;
@@ -168,6 +169,30 @@ class ClueStorage {
     const clues: Clue[] = this.getClues();
     for (const clue of clues) {
       clue.markAsUnsolved();
+    }
+  }
+
+  revealClue(card:string):void{
+    const clues:Clue[]=this.getClues();
+    for (const clue of clues) {
+      if(clue.clueCards.includes(card)){
+        if(!revealed_clues.includes(row_to_clue_name_record[clue.clueNumber])){
+          revealed_clues.push(row_to_clue_name_record[clue.clueNumber]);
+        }
+        return;
+      }
+    }
+  }
+
+  hideClue(card:string):void{
+    const clues:Clue[]=this.getClues();
+    for (const clue of clues) {
+      if(clue.clueCards.includes(card)){
+        if(revealed_clues.includes(row_to_clue_name_record[clue.clueNumber])){
+          revealed_clues.splice(revealed_clues.indexOf(row_to_clue_name_record[clue.clueNumber]),1);
+        }
+        return;
+      }
     }
   }
 }
@@ -538,8 +563,10 @@ function Original():React.ReactElement{
         }
         if(top!==default_color && top!==highlight_color){
           clue_storage.setSolved(newSquares[row][col].text,top);
+          clue_storage.revealClue(newSquares[row][col].text);
         } else {
           clue_storage.setUnsolved(newSquares[row][col].text);
+          clue_storage.hideClue(newSquares[row][col].text);
         }
         clues_solved=clue_storage.getNumSolvedClues();
         newSquares[row][col] = {
@@ -624,7 +651,7 @@ function Original():React.ReactElement{
     width: '100%',
   };
 
-  const clueStyle:React.CSSProperties = {
+  const clueSolvedStyle:React.CSSProperties = {
     display: 'flex',
     //flexDirection: 'row',
     //alignItems: 'flex-start',
@@ -647,6 +674,17 @@ function Original():React.ReactElement{
     //alignItems: 'center',
   };
 
+  const clueRevealContainerStyle:React.CSSProperties = {
+    display: 'flex',
+    width: '100%',
+  };
+
+  const clueRevealStyle:React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    width: '100%',
+  };
 
   console.log("squares: ",squares)
 
@@ -671,11 +709,18 @@ function Original():React.ReactElement{
             )}
           </div>
           <div style={clueSwapContainerStyle}>
-            <div style={clueStyle}>
+            <div style={clueSolvedStyle}>
                 <h2>Clues: {clues_solved}/6</h2>
             </div>
             <div style={swapStyle}>
                 <h2>Swaps: {remaining_swaps}</h2>
+            </div>
+          </div>
+          <div style={clueRevealContainerStyle}>
+            <div style={clueRevealStyle}>
+              {revealed_clues.map((clue, index) => (
+                <h3 key={index}>{clue}</h3>
+              ))}
             </div>
           </div>
         </div>
