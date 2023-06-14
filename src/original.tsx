@@ -37,7 +37,7 @@ const row_to_clue_name_record: Record<number, string> = {
 };
 
 let clues_solved:number=0;
-let revealed_clues:string[]=[];
+let revealed_clues:{ clue_number: number, clue_name: string }[] = [];
 
 class Clue {
   private clue_number: number;
@@ -172,24 +172,29 @@ class ClueStorage {
     }
   }
 
-  revealClue(card:string):void{
+  revealClue(card:string, color:string):void{
     const clues:Clue[]=this.getClues();
     for (const clue of clues) {
-      if(clue.clueCards.includes(card)){
-        if(!revealed_clues.includes(row_to_clue_name_record[clue.clueNumber])){
-          revealed_clues.push(row_to_clue_name_record[clue.clueNumber]);
+      if(clue.clueColor===color && clue.clueCards.includes(card)){
+        const revealedClue = {
+          clue_number: clue.clueNumber,
+          clue_name: row_to_clue_name_record[clue.clueNumber]
+        };
+        if(!revealed_clues.some(clueObj => clueObj.clue_number === revealedClue.clue_number)) {
+          revealed_clues.push(revealedClue);
         }
         return;
       }
     }
   }
 
-  hideClue(card:string):void{
+  hideClue(card:string, color:string):void{
     const clues:Clue[]=this.getClues();
     for (const clue of clues) {
-      if(clue.clueCards.includes(card)){
-        if(revealed_clues.includes(row_to_clue_name_record[clue.clueNumber])){
-          revealed_clues.splice(revealed_clues.indexOf(row_to_clue_name_record[clue.clueNumber]),1);
+      if(clue.clueColor===color && clue.clueCards.includes(card)){
+        const index = revealed_clues.findIndex(clueObj => clueObj.clue_number === clue.clueNumber);
+        if (index !== -1) {
+          revealed_clues.splice(index, 1);
         }
         return;
       }
@@ -402,6 +407,17 @@ function Original():React.ReactElement{
     }
   };
 
+  function check_for_special_color(newSquares: SquareData[][]):boolean {
+    for (let row = 0; row < gridSize; row++) {
+      for (let col = 0; col < gridSize; col++) {
+        if(newSquares[row][col].color===special_color){
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   function check_rows_for_matching_elements(newSquares: SquareData[][]) {
     for (let row = 0; row < gridSize; row++) {
       const counting_record: Record<number, number> = {};
@@ -563,10 +579,16 @@ function Original():React.ReactElement{
         }
         if(top!==default_color && top!==highlight_color){
           clue_storage.setSolved(newSquares[row][col].text,top);
-          clue_storage.revealClue(newSquares[row][col].text);
+          clue_storage.revealClue(newSquares[row][col].text,top);
         } else {
           clue_storage.setUnsolved(newSquares[row][col].text);
-          clue_storage.hideClue(newSquares[row][col].text);
+          if(!check_for_special_color(newSquares)){
+            clue_storage.hideClue(newSquares[row][col].text,special_color);
+          } else {
+            //get the first color of two possible colours (the second can only be special_colour)
+            const colour_array:number[]=data_key_record[newSquares[row][col].text];
+            clue_storage.hideClue(newSquares[row][col].text,colors_data_record[colour_array[0]]);
+          }
         }
         clues_solved=clue_storage.getNumSolvedClues();
         newSquares[row][col] = {
@@ -719,7 +741,7 @@ function Original():React.ReactElement{
           <div style={clueRevealContainerStyle}>
             <div style={clueRevealStyle}>
               {revealed_clues.map((clue, index) => (
-                <h3 key={index}>{clue}</h3>
+                <h3 key={clue.clue_number}>{clue.clue_name}</h3>
               ))}
             </div>
           </div>
