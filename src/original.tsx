@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import seedrandom from 'seedrandom';
 import { useDrag, useDrop, DragSourceMonitor } from 'react-dnd';
@@ -367,6 +367,32 @@ function Square({ text, rowIndex, colIndex, handleDrop, isMatching, color, borde
     </div>
   );
 }
+
+function RevealedCluesComponent(): React.ReactElement {
+  const [revealedClues, setRevealedClues] = useState<{ clue_number: number; clue_name: string }[]>([
+    { clue_number: 0, clue_name: 'Hidden' },
+    { clue_number: 1, clue_name: 'Hidden' },
+    { clue_number: 2, clue_name: 'Hidden' },
+    { clue_number: 3, clue_name: 'Hidden' },
+    { clue_number: 4, clue_name: 'Hidden' },
+    { clue_number: 5, clue_name: 'Hidden' },
+  ]);
+  // Add any additional logic or functions related to the component here
+
+  return (
+    <div>
+    <h2>Revealed Clues</h2>
+    <ul>
+      {revealedClues.map((clue) => (
+        <li key={clue.clue_number}>
+          Clue #{clue.clue_number}: {clue.clue_name}
+        </li>
+      ))}
+    </ul>
+  </div>
+  );
+}
+
 
 function Original():React.ReactElement{
   const gridSize = 5;
@@ -740,9 +766,7 @@ function Original():React.ReactElement{
           </div>
           <div style={clueRevealContainerStyle}>
             <div style={clueRevealStyle}>
-              {revealed_clues.map((clue, index) => (
-                <h3 key={clue.clue_number}>{clue.clue_name}</h3>
-              ))}
+              <RevealedCluesComponent />
             </div>
           </div>
         </div>
