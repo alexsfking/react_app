@@ -379,12 +379,16 @@ function RevealedCluesComponent(): React.ReactElement {
   ]);
   // Add any additional logic or functions related to the component here
 
+  const hidden:React.CSSProperties = {
+    display: 'none',
+  };
+
   return (
     <div>
     <h2>Revealed Clues</h2>
     <ul>
       {revealedClues.map((clue) => (
-        <li key={clue.clue_number}>
+        <li key={clue.clue_number} style={clue.clue_name === 'Hidden' ? hidden : {}}>
           Clue #{clue.clue_number}: {clue.clue_name}
         </li>
       ))}
