@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import seedrandom from 'seedrandom';
 import { useDrag, useDrop, DragSourceMonitor } from 'react-dnd';
+import ModeToggleButton from './light_dark_mode_toggle';
 //import { HTML5Backend } from 'react-dnd-html5-backend';
 
 const normal_data_array: string[][] = [
@@ -402,6 +403,12 @@ function Original():React.ReactElement{
   const gridSize = 5;
   const squareSize = 120;
 
+  //light dark toggle.
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const handleModeToggle = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
   interface SquareData {
     text: string;
     color?: string;
@@ -741,8 +748,11 @@ function Original():React.ReactElement{
   console.log("squares: ",squares)
 
   return (
-    <div>
-      <h1>Grid Page</h1>
+    <div className={isDarkMode ? 'dark-mode' : 'light-mode'}>
+      <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
+        <ModeToggleButton isDarkMode={isDarkMode} onToggle={handleModeToggle} />
+      </div>
+      <h1>Grid</h1>
       <div style={outerStyle}>
         <div style={containerStyle}>
           <div style={gridStyle}>
